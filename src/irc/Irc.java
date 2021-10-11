@@ -37,10 +37,14 @@ public class Irc {
             JvnObject jo = js.jvnLookupObject("IRC");
 
             if (jo == null) {
+                System.out.println("IRC not found, creating it ...");
                 jo = js.jvnCreateObject((Serializable) new Sentence());
                 // after creation, I have a write lock on the object
                 jo.jvnUnLock();
                 js.jvnRegisterObject("IRC", jo);
+            } else {
+                System.out.println("IRC found.");
+                jo.toString();
             }
             // create the graphical part of the Chat application
             new Irc(jo);

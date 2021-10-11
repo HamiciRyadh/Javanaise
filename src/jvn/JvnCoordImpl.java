@@ -100,11 +100,12 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
             throw new JvnException("The requested object name is already taken.");
         }
 
-        // Step 3: Register the JvnObject with the given name.
+        // Step 3: Register the JvnObject with the given name and reset its lock.
         jvnObjectNameIdMap.put(jon, jo.jvnGetObjectId());
         final JvnObjectContainer container = new JvnObjectContainer(jo, new HashMap<>());
         container.getRemoteServerLocks().put(jsId, Lock.DEFAULT_REGISTRATION_LOCK);
         jvnObjectContainerMap.put(jo.jvnGetObjectId(), container);
+        jo.resetLock();
     }
 
     /**
@@ -115,7 +116,15 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      * @throws java.rmi.RemoteException,JvnException
      **/
     public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException, jvn.JvnException {
-        // FIXME: What to do with the remote server reference ?
+        // Step 1: Check if the remote server is already known
+        Integer jsId = findRemoteServerId(js);
+        if (jsId == null) {
+            // This is the first interaction with this remote server, we have to give it a unique ID and add keep a
+            // reference to it.
+            jsId = remoteServerIdCounter++;
+            remoteServerIDsMap.put(jsId, js);
+        }
+
         final Integer joId = jvnObjectNameIdMap.get(jon);
         if (joId == null) {
             // The given object name isn't associated with any known Object.
@@ -139,7 +148,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      **/
     public Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
         // Check who owns the lock, if no one then give the lock, if someone has the lock then if it is a read lock
-        // then give the lock and if it's a write lock invalidate and then give the lock
+        // then give the lock and if it's a write lock invalidate and then give the lock.
         final JvnObjectContainer joc = jvnObjectContainerMap.get(joi);
         if (joc == null) {
             throw new JvnException("Object not found, cannot lock.");
@@ -154,15 +163,14 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         // can leave.
         for (Map.Entry<Integer, Lock> entry: joc.getRemoteServerLocks().entrySet()) {
             if (entry.getValue() == Lock.WRITE) {
-                remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriterForReader(joi);
+                final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriterForReader(joi);
+                joc.getJvnObject().updateSharedObject(newVal);
                 entry.setValue(Lock.NO_LOCK);
                 break;
             }
         }
 
         // Step 2: Give the requested lock.
-//        FIXME Check if we have to change the lock here
-//        joc.getJvnObject().jvnLockRead();
         joc.getRemoteServerLocks().put(jsId, Lock.READ);
 
         return joc.getJvnObject();
@@ -178,7 +186,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      **/
     public Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
         // Check who owns the lock, if no one then give the lock, if someone has the lock then invalidate and then give
-        // the lock
+        // the lock.
         final JvnObjectContainer joc = jvnObjectContainerMap.get(joi);
         if (joc == null) {
             throw new JvnException("Object not found, cannot lock.");
@@ -196,14 +204,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
             if (entry.getValue() == Lock.READ) {
                 remoteServerIDsMap.get(entry.getKey()).jvnInvalidateReader(joi);
             } else { // Lock.WRITE
-                remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriter(joi);
+                final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriter(joi);
+                joc.getJvnObject().updateSharedObject(newVal);
             }
             entry.setValue(Lock.NO_LOCK);
         }
 
         // Step 2: Give the requested lock.
-//        FIXME Check if we have to change the lock here
-//        joc.getJvnObject().jvnLockWrite();
         joc.getRemoteServerLocks().put(jsId, Lock.WRITE);
 
         return joc.getJvnObject();

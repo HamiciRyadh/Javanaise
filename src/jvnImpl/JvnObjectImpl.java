@@ -2,6 +2,7 @@ package jvnImpl;
 
 import jvn.JvnException;
 import jvn.JvnObject;
+import jvn.JvnServerImpl;
 
 import java.io.Serializable;
 
@@ -9,30 +10,35 @@ public class JvnObjectImpl implements JvnObject {
 
     private final int id;
     private Lock lock;
-    private final Serializable sharedObject;
+    private Serializable sharedObject;
 
 
     public JvnObjectImpl(int id, Serializable sharedObject) {
         this.id = id;
         this.sharedObject = sharedObject;
-        this.lock = Lock.WRITE_CACHE;
+        this.lock = Lock.WRITE;
     }
 
     @Override
     public void jvnLockRead() throws JvnException {
         switch (lock) {
             case NO_LOCK: {
+                JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ;
                 break;
             }
-            case READ_CACHE: {
+            case READ:
+            case READ_CACHE:
+            case READ_WRITE_CACHE: {
                 break;
             }
             case WRITE_CACHE: {
+                JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ_WRITE_CACHE;
                 break;
             }
             default: {
+                System.err.println("Lock: " + lock.name());
                 throw new JvnException("Unexpected lock state, cannot lock read.");
             }
         }
@@ -42,6 +48,7 @@ public class JvnObjectImpl implements JvnObject {
     public void jvnLockWrite() throws JvnException {
         switch (lock) {
             case NO_LOCK: {
+                JvnServerImpl.jvnGetServer().jvnLockWrite(id);
                 lock = Lock.WRITE;
                 break;
             }
@@ -50,6 +57,7 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             default: {
+                System.err.println("Lock: " + lock.name());
                 throw new JvnException("Unexpected lock state, cannot lock write.");
             }
         }
@@ -67,9 +75,15 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             case NO_LOCK: {
+                System.err.println("Lock: " + lock.name());
                 throw new JvnException("Unexpected lock state, cannot unlock.");
             }
         }
+    }
+
+    @Override
+    public void resetLock() throws JvnException {
+        lock = Lock.NO_LOCK;
     }
 
     @Override
@@ -80,6 +94,11 @@ public class JvnObjectImpl implements JvnObject {
     @Override
     public Serializable jvnGetSharedObject() throws JvnException {
         return sharedObject;
+    }
+
+    @Override
+    public void updateSharedObject(Serializable data) throws JvnException {
+        this.sharedObject = data;
     }
 
     @Override

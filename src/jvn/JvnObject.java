@@ -39,6 +39,12 @@ public interface JvnObject extends Serializable {
      **/
     void jvnUnLock() throws jvn.JvnException;
 
+    /**
+     * Resets the object's lock
+     *
+     * @throws JvnException
+     **/
+    void resetLock() throws jvn.JvnException;
 
     /**
      * Get the object identification
@@ -54,6 +60,12 @@ public interface JvnObject extends Serializable {
      **/
     Serializable jvnGetSharedObject() throws jvn.JvnException;
 
+    /**
+     * UPdate the shared object associated to this JvnObject
+     *
+     * @throws JvnException
+     **/
+    void updateSharedObject(Serializable data) throws JvnException;
 
     /**
      * Invalidate the Read lock of the JVN object
