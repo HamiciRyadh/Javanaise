@@ -134,7 +134,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         try {
             final JvnObject jo = (JvnObject) coordinator.jvnLockRead(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
-            return jo;
+            return jo.jvnGetSharedObject();
         } catch (RemoteException e) {
             e.printStackTrace();
             throw new JvnException("A RemoteException occurred while request a read lock.");
@@ -152,7 +152,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         try {
             final JvnObject jo = (JvnObject) coordinator.jvnLockWrite(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
-            return jo;
+            return jo.jvnGetSharedObject();
         } catch (RemoteException e) {
             e.printStackTrace();
             throw new JvnException("A RemoteException occurred while request a write lock.");

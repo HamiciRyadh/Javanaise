@@ -23,7 +23,7 @@ public class JvnObjectImpl implements JvnObject {
     public void jvnLockRead() throws JvnException {
         switch (lock) {
             case NO_LOCK: {
-                JvnServerImpl.jvnGetServer().jvnLockRead(id);
+                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ;
                 break;
             }
@@ -33,7 +33,7 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             case WRITE_CACHE: {
-                JvnServerImpl.jvnGetServer().jvnLockRead(id);
+                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ_WRITE_CACHE;
                 break;
             }
@@ -48,7 +48,7 @@ public class JvnObjectImpl implements JvnObject {
     public void jvnLockWrite() throws JvnException {
         switch (lock) {
             case NO_LOCK: {
-                JvnServerImpl.jvnGetServer().jvnLockWrite(id);
+                sharedObject = JvnServerImpl.jvnGetServer().jvnLockWrite(id);
                 lock = Lock.WRITE;
                 break;
             }
