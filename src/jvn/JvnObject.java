@@ -7,7 +7,8 @@
 
 package jvn;
 
-import jvnImpl.Lock;
+import pojo.JvnException;
+import pojo.Lock;
 
 import java.io.Serializable;
 
@@ -25,49 +26,49 @@ public interface JvnObject extends Serializable {
      *
      * @throws JvnException
      **/
-    void jvnLockRead() throws jvn.JvnException;
+    void jvnLockRead() throws JvnException;
 
     /**
      * Get a Write lock on the object
      *
      * @throws JvnException
      **/
-    void jvnLockWrite() throws jvn.JvnException;
+    void jvnLockWrite() throws JvnException;
 
     /**
      * Unlock  the object
      *
      * @throws JvnException
      **/
-    void jvnUnLock() throws jvn.JvnException;
+    void jvnUnLock() throws JvnException;
 
     /**
      * Update the object's lock
      *
      * @throws JvnException
      **/
-    void updateLock(Lock lock) throws jvn.JvnException;
+    void updateLock(Lock lock) throws JvnException;
 
     /**
      * Return the object's lock
      *
      * @throws JvnException
      **/
-    Lock getLock() throws jvn.JvnException;
+    Lock getLock() throws JvnException;
 
     /**
      * Get the object identification
      *
      * @throws JvnException
      **/
-    int jvnGetObjectId() throws jvn.JvnException;
+    int jvnGetObjectId() throws JvnException;
 
     /**
      * Get the shared object associated to this JvnObject
      *
      * @throws JvnException
      **/
-    Serializable jvnGetSharedObject() throws jvn.JvnException;
+    Serializable jvnGetSharedObject() throws JvnException;
 
     /**
      * UPdate the shared object associated to this JvnObject
@@ -81,7 +82,7 @@ public interface JvnObject extends Serializable {
      *
      * @throws JvnException
      **/
-    void jvnInvalidateReader() throws jvn.JvnException;
+    void jvnInvalidateReader() throws JvnException;
 
     /**
      * Invalidate the Write lock of the JVN object
@@ -89,7 +90,7 @@ public interface JvnObject extends Serializable {
      * @return the current JVN object state
      * @throws JvnException
      **/
-    Serializable jvnInvalidateWriter() throws jvn.JvnException;
+    Serializable jvnInvalidateWriter() throws JvnException;
 
     /**
      * Reduce the Write lock of the JVN object
@@ -97,5 +98,5 @@ public interface JvnObject extends Serializable {
      * @return the current JVN object state
      * @throws JvnException
      **/
-    Serializable jvnInvalidateWriterForReader() throws jvn.JvnException;
+    Serializable jvnInvalidateWriterForReader() throws JvnException;
 }

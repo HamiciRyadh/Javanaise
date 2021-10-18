@@ -1,6 +1,6 @@
-package jvnImpl;
+package app;
 
-import jvn.JvnCoordImpl;
+import jvn.jvnImpl.JvnCoordImpl;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

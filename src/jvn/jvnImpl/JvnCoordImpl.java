@@ -7,10 +7,14 @@
  * Authors: 
  */
 
-package jvn;
+package jvn.jvnImpl;
 
-import jvnImpl.JvnObjectContainer;
-import jvnImpl.Lock;
+import jvn.JvnObject;
+import jvn.JvnRemoteCoord;
+import jvn.JvnRemoteServer;
+import pojo.JvnException;
+import pojo.JvnObjectContainer;
+import pojo.Lock;
 
 import java.io.Serializable;
 import java.rmi.server.UnicastRemoteObject;
@@ -74,7 +78,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      *
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public int jvnGetObjectId() throws java.rmi.RemoteException, jvn.JvnException {
+    public int jvnGetObjectId() throws java.rmi.RemoteException, JvnException {
         return jvnObjectIdCounter++;
     }
 
@@ -86,7 +90,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      * @param js  : the remote reference of the JVNServer
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException, jvn.JvnException {
+    public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
         // Step 1: Check if the remote server is already known
         Integer jsId = findRemoteServerId(js);
         if (jsId == null) {
@@ -116,7 +120,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      * @param js  : the remote reference of the JVNServer
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException, jvn.JvnException {
+    public JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
         // Step 1: Check if the remote server is already known
         Integer jsId = findRemoteServerId(js);
         if (jsId == null) {

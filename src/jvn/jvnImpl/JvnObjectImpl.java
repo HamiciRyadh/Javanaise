@@ -1,8 +1,8 @@
-package jvnImpl;
+package jvn.jvnImpl;
 
-import jvn.JvnException;
 import jvn.JvnObject;
-import jvn.JvnServerImpl;
+import pojo.JvnException;
+import pojo.Lock;
 
 import java.io.Serializable;
 
@@ -34,7 +34,6 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             case WRITE_CACHE: {
-//                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ_WRITE_CACHE;
                 break;
             }
@@ -65,7 +64,7 @@ public class JvnObjectImpl implements JvnObject {
     }
 
     @Override
-    public void jvnUnLock() throws JvnException {
+    public synchronized void jvnUnLock() throws JvnException {
         switch (lock) {
             case READ: {
                 lock = Lock.READ_CACHE;
@@ -75,12 +74,9 @@ public class JvnObjectImpl implements JvnObject {
                 lock = Lock.WRITE_CACHE;
                 break;
             }
-//            case NO_LOCK: {
-//                throw new JvnException("Unexpected lock state, cannot unlock. Lock: " + lock);
-//            }
         }
         JvnServerImpl.jvnGetServer().findCachedValue(id).updateLock(lock);
-//        notify();
+        notify();
     }
 
     @Override
@@ -109,14 +105,14 @@ public class JvnObjectImpl implements JvnObject {
     }
 
     @Override
-    public void jvnInvalidateReader() throws JvnException {
-//        if (lock == Lock.READ) {
-//            try {
-//                wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
+    public synchronized void jvnInvalidateReader() throws JvnException {
+        if (lock == Lock.READ) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         if (lock == Lock.READ || lock == Lock.READ_CACHE) {
             lock = Lock.NO_LOCK;
             System.err.println("Invalidate Reader.");
@@ -126,15 +122,15 @@ public class JvnObjectImpl implements JvnObject {
     }
 
     @Override
-    public Serializable jvnInvalidateWriter() throws JvnException {
-//        if (lock == Lock.WRITE) {
-//            try {
-//                wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE) {
+    public synchronized Serializable jvnInvalidateWriter() throws JvnException {
+        if (lock == Lock.WRITE) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
             lock = Lock.NO_LOCK;
             System.err.println("Invalidate Writer.");
             return sharedObject;
@@ -145,14 +141,14 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public Serializable jvnInvalidateWriterForReader() throws JvnException {
-//        if (lock == Lock.WRITE) {
-//            try {
-//                wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
+        if (lock == Lock.WRITE) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
             lock = Lock.READ_CACHE;
             System.err.println("Invalidate Writer for Reader.");
             return sharedObject;

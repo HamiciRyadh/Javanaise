@@ -9,6 +9,8 @@
  */
 
 package jvn;
+import pojo.JvnException;
+
 import java.io.Serializable;
 
 /**
@@ -26,7 +28,7 @@ public interface JvnLocalServer {
 	* @throws JvnException
 	**/
 	public  JvnObject jvnCreateObject(Serializable jos)
-	throws jvn.JvnException ; 
+	throws JvnException;
 	
 	/**
 	* Associate a symbolic name with a JVN object
@@ -35,7 +37,7 @@ public interface JvnLocalServer {
 	* @throws JvnException
 	**/
 	public  void jvnRegisterObject(String jon, JvnObject jo)
-	throws jvn.JvnException; 
+	throws JvnException;
 	
 	/**
 	* Get the reference of a JVN object associated to a symbolic name
@@ -44,7 +46,7 @@ public interface JvnLocalServer {
 	* @throws JvnException
 	**/
 	public  JvnObject jvnLookupObject(String jon)
-	throws jvn.JvnException ; 
+	throws JvnException;
 	
 	
 	/**
@@ -71,9 +73,9 @@ public interface JvnLocalServer {
     * @throws JvnException
     **/
    public  void jvnTerminate()
-   throws jvn.JvnException;
+   throws JvnException;
 
-   public JvnObject findCachedValue(int joi) throws jvn.JvnException;
+   public JvnObject findCachedValue(int joi) throws JvnException;
 }
 
  

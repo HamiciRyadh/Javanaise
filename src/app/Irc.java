@@ -5,12 +5,15 @@
  * Authors: 
  */
 
-package irc;
+package app;
 
 import java.awt.*;
 import java.awt.event.*;
 
+import pojo.Sentence;
 import jvn.*;
+import pojo.JvnException;
+import jvn.jvnImpl.JvnServerImpl;
 
 import java.io.*;
 

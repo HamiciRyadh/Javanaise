@@ -1,4 +1,4 @@
-package jvnImpl;
+package pojo;
 
 import jvn.JvnObject;
 
