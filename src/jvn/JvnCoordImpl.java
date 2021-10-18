@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
@@ -105,7 +106,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         final JvnObjectContainer container = new JvnObjectContainer(jo, new HashMap<>());
         container.getRemoteServerLocks().put(jsId, Lock.DEFAULT_REGISTRATION_LOCK);
         jvnObjectContainerMap.put(jo.jvnGetObjectId(), container);
-        jo.resetLock();
+        jo.updateLock(Lock.NO_LOCK);
     }
 
     /**
@@ -163,15 +164,17 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         // can leave.
         for (Map.Entry<Integer, Lock> entry: joc.getRemoteServerLocks().entrySet()) {
             if (entry.getValue() == Lock.WRITE) {
+                if (Objects.equals(entry.getKey(), jsId)) continue;
                 final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriterForReader(joi);
                 joc.getJvnObject().updateSharedObject(newVal);
-                entry.setValue(Lock.NO_LOCK);
+                entry.setValue(Lock.READ);
                 break;
             }
         }
 
         // Step 2: Give the requested lock.
         joc.getRemoteServerLocks().put(jsId, Lock.READ);
+        joc.getJvnObject().updateLock(Lock.READ);
 
         return joc.getJvnObject();
     }
@@ -199,6 +202,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 
         // Step 1: Invalidate the existing locks.
         for (Map.Entry<Integer, Lock> entry: joc.getRemoteServerLocks().entrySet()) {
+            if (Objects.equals(entry.getKey(), jsId)) continue;
             if (entry.getValue() == Lock.NO_LOCK) continue;
 
             if (entry.getValue() == Lock.READ) {
@@ -212,6 +216,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 
         // Step 2: Give the requested lock.
         joc.getRemoteServerLocks().put(jsId, Lock.WRITE);
+        joc.getJvnObject().updateLock(Lock.WRITE);
 
         return joc.getJvnObject();
     }

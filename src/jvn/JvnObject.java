@@ -7,6 +7,8 @@
 
 package jvn;
 
+import jvnImpl.Lock;
+
 import java.io.Serializable;
 
 /**
@@ -40,11 +42,18 @@ public interface JvnObject extends Serializable {
     void jvnUnLock() throws jvn.JvnException;
 
     /**
-     * Resets the object's lock
+     * Update the object's lock
      *
      * @throws JvnException
      **/
-    void resetLock() throws jvn.JvnException;
+    void updateLock(Lock lock) throws jvn.JvnException;
+
+    /**
+     * Return the object's lock
+     *
+     * @throws JvnException
+     **/
+    Lock getLock() throws jvn.JvnException;
 
     /**
      * Get the object identification

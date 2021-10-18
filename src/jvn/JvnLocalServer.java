@@ -71,7 +71,9 @@ public interface JvnLocalServer {
     * @throws JvnException
     **/
    public  void jvnTerminate()
-   throws jvn.JvnException; 
+   throws jvn.JvnException;
+
+   public JvnObject findCachedValue(int joi) throws jvn.JvnException;
 }
 
  

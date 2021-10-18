@@ -10,6 +10,7 @@
 package jvn;
 
 import jvnImpl.JvnObjectImpl;
+import jvnImpl.Lock;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -72,6 +73,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         }
     }
 
+    @Override
+    public JvnObject findCachedValue(int joi) throws JvnException {
+        return jvnObjectMap.get(joi);
+    }
+
     /**
      * creation of a JVN object
      *
@@ -115,7 +121,10 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
         try {
             final JvnObject jo = coordinator.jvnLookupObject(jon, this);
-            if (jo != null) jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+            if (jo != null) {
+                jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+                jo.updateLock(Lock.NO_LOCK);
+            }
             return jo;
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -170,6 +179,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         jo.jvnInvalidateReader();
     }
 
@@ -183,6 +193,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, jvn.JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         return jo.jvnInvalidateWriter();
     }
 
@@ -196,6 +207,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         return jo.jvnInvalidateWriterForReader();
     }
 }

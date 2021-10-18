@@ -21,6 +21,7 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public void jvnLockRead() throws JvnException {
+        this.lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
         switch (lock) {
             case NO_LOCK: {
                 sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
@@ -45,6 +46,7 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public void jvnLockWrite() throws JvnException {
+        this.lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
         switch (lock) {
             case NO_LOCK:
             case READ_CACHE:{
@@ -77,11 +79,18 @@ public class JvnObjectImpl implements JvnObject {
 //                throw new JvnException("Unexpected lock state, cannot unlock. Lock: " + lock);
 //            }
         }
+        JvnServerImpl.jvnGetServer().findCachedValue(id).updateLock(lock);
+//        notify();
     }
 
     @Override
-    public void resetLock() throws JvnException {
-        lock = Lock.NO_LOCK;
+    public void updateLock(Lock lock) throws JvnException {
+        this.lock = lock;
+    }
+
+    @Override
+    public Lock getLock() throws JvnException {
+        return lock;
     }
 
     @Override
@@ -101,8 +110,16 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public void jvnInvalidateReader() throws JvnException {
+//        if (lock == Lock.READ) {
+//            try {
+//                wait();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
         if (lock == Lock.READ || lock == Lock.READ_CACHE) {
             lock = Lock.NO_LOCK;
+            System.err.println("Invalidate Reader.");
         } else {
             throw new JvnException("Cannot invalidate reader cache when the lock is not READ or READ_CACHE. Lock: " + lock);
         }
@@ -110,19 +127,34 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public Serializable jvnInvalidateWriter() throws JvnException {
+//        if (lock == Lock.WRITE) {
+//            try {
+//                wait();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
         if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE) {
             lock = Lock.NO_LOCK;
+            System.err.println("Invalidate Writer.");
             return sharedObject;
         } else {
             throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
         }
     }
 
-    // FIXME Doubtful
     @Override
     public Serializable jvnInvalidateWriterForReader() throws JvnException {
-        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE) {
-            lock = Lock.READ_WRITE_CACHE;
+//        if (lock == Lock.WRITE) {
+//            try {
+//                wait();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
+            lock = Lock.READ_CACHE;
+            System.err.println("Invalidate Writer for Reader.");
             return sharedObject;
         } else {
             throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
