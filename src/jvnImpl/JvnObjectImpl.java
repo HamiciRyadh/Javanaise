@@ -16,7 +16,7 @@ public class JvnObjectImpl implements JvnObject {
     public JvnObjectImpl(int id, Serializable sharedObject) {
         this.id = id;
         this.sharedObject = sharedObject;
-        this.lock = Lock.WRITE;
+        this.lock = Lock.NO_LOCK;
     }
 
     @Override
@@ -33,13 +33,12 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             case WRITE_CACHE: {
-                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
+//                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
                 lock = Lock.READ_WRITE_CACHE;
                 break;
             }
             default: {
-                System.err.println("Lock: " + lock.name());
-                throw new JvnException("Unexpected lock state, cannot lock read.");
+                throw new JvnException("Unexpected lock state, cannot lock read. Lock: " + lock);
             }
         }
     }
@@ -47,7 +46,8 @@ public class JvnObjectImpl implements JvnObject {
     @Override
     public void jvnLockWrite() throws JvnException {
         switch (lock) {
-            case NO_LOCK: {
+            case NO_LOCK:
+            case READ_CACHE:{
                 sharedObject = JvnServerImpl.jvnGetServer().jvnLockWrite(id);
                 lock = Lock.WRITE;
                 break;
@@ -57,8 +57,7 @@ public class JvnObjectImpl implements JvnObject {
                 break;
             }
             default: {
-                System.err.println("Lock: " + lock.name());
-                throw new JvnException("Unexpected lock state, cannot lock write.");
+                throw new JvnException("Unexpected lock state, cannot lock write. Lock: " + lock);
             }
         }
     }
@@ -74,10 +73,9 @@ public class JvnObjectImpl implements JvnObject {
                 lock = Lock.WRITE_CACHE;
                 break;
             }
-            case NO_LOCK: {
-                System.err.println("Lock: " + lock.name());
-                throw new JvnException("Unexpected lock state, cannot unlock.");
-            }
+//            case NO_LOCK: {
+//                throw new JvnException("Unexpected lock state, cannot unlock. Lock: " + lock);
+//            }
         }
     }
 
@@ -106,7 +104,7 @@ public class JvnObjectImpl implements JvnObject {
         if (lock == Lock.READ || lock == Lock.READ_CACHE) {
             lock = Lock.NO_LOCK;
         } else {
-            throw new JvnException("Cannot invalidate reader cache when the lock is not READ or READ_CACHE.");
+            throw new JvnException("Cannot invalidate reader cache when the lock is not READ or READ_CACHE. Lock: " + lock);
         }
     }
 
@@ -116,7 +114,7 @@ public class JvnObjectImpl implements JvnObject {
             lock = Lock.NO_LOCK;
             return sharedObject;
         } else {
-            throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE.");
+            throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
         }
     }
 
@@ -127,7 +125,7 @@ public class JvnObjectImpl implements JvnObject {
             lock = Lock.READ_WRITE_CACHE;
             return sharedObject;
         } else {
-            throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE.");
+            throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
         }
     }
 }
