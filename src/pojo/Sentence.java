@@ -1,29 +1,42 @@
 /***
  * Sentence class : used for keeping the text exchanged between users
  * during a chat application
- * Contact: 
+ * Contact:
  *
- * Authors: 
+ * Authors:
  */
 
 package pojo;
 
-public class Sentence implements java.io.Serializable {
-	/**
-	 * 
-	 */
+import proxy.ISentence;
+import proxy.JvnProxy;
+
+import java.io.Serializable;
+
+public class Sentence implements Serializable, ISentence {
 	private static final long serialVersionUID = 1L;
-	String 	data;
-  
+	private String 	data;
+
 	public Sentence() {
-		data = new String("");
+		data = "";
 	}
-	
+
+	public static ISentence newSharedInstance(String jon) {
+		try {
+			return (ISentence) JvnProxy.newInstance(jon);
+		} catch (JvnException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
 	public void write(String text) {
 		data = text;
 	}
+
+	@Override
 	public String read() {
 		return data;	
 	}
-	
 }
