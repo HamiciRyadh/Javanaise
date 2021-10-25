@@ -1,4 +1,4 @@
-package proxy;
+package main.proxy;
 
 public enum LockType {
     READ, WRITE

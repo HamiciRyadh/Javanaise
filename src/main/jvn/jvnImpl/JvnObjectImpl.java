@@ -1,8 +1,8 @@
-package jvn.jvnImpl;
+package main.jvn.jvnImpl;
 
-import jvn.JvnObject;
-import pojo.JvnException;
-import pojo.Lock;
+import main.jvn.JvnObject;
+import main.pojo.JvnException;
+import main.pojo.Lock;
 
 import java.io.Serializable;
 
@@ -113,9 +113,8 @@ public class JvnObjectImpl implements JvnObject {
                 e.printStackTrace();
             }
         }
-        if (lock == Lock.READ || lock == Lock.READ_CACHE) {
+        if (lock == Lock.READ || lock == Lock.READ_CACHE || lock == Lock.NO_LOCK) {
             lock = Lock.NO_LOCK;
-            System.err.println("Invalidate Reader.");
         } else {
             throw new JvnException("Cannot invalidate reader cache when the lock is not READ or READ_CACHE. Lock: " + lock);
         }
@@ -130,9 +129,8 @@ public class JvnObjectImpl implements JvnObject {
                 e.printStackTrace();
             }
         }
-        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
+        if (lock == Lock.WRITE || lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE || lock == Lock.NO_LOCK) {
             lock = Lock.NO_LOCK;
-            System.err.println("Invalidate Writer.");
             return sharedObject;
         } else {
             throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
@@ -148,12 +146,11 @@ public class JvnObjectImpl implements JvnObject {
                 e.printStackTrace();
             }
         }
-        if (lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE) {
+        if (lock == Lock.WRITE_CACHE || lock == Lock.READ_WRITE_CACHE || lock == Lock.READ_CACHE) {
             lock = Lock.READ_CACHE;
-            System.err.println("Invalidate Writer for Reader.");
             return sharedObject;
         } else {
-            throw new JvnException("Cannot invalidate writer cache when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
+            throw new JvnException("Cannot invalidate writer cache for reader when the lock is not WRITE or WRITE_CACHE. Lock: " + lock);
         }
     }
 }

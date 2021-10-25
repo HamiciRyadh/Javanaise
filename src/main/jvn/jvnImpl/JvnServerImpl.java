@@ -7,14 +7,14 @@
  * Authors: 
  */
 
-package jvn.jvnImpl;
+package main.jvn.jvnImpl;
 
-import jvn.JvnLocalServer;
-import jvn.JvnObject;
-import jvn.JvnRemoteCoord;
-import jvn.JvnRemoteServer;
-import pojo.JvnException;
-import pojo.Lock;
+import main.jvn.JvnLocalServer;
+import main.jvn.JvnObject;
+import main.jvn.JvnRemoteCoord;
+import main.jvn.JvnRemoteServer;
+import main.pojo.JvnException;
+import main.pojo.Lock;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

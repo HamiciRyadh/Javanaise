@@ -6,10 +6,10 @@
  * Authors:
  */
 
-package pojo;
+package main.pojo;
 
-import proxy.ISentence;
-import proxy.JvnProxy;
+import main.proxy.ISentence;
+import main.proxy.JvnProxy;
 
 import java.io.Serializable;
 

@@ -1,9 +1,9 @@
-package proxy;
+package main.proxy;
 
-import jvn.JvnObject;
-import jvn.jvnImpl.JvnServerImpl;
-import pojo.JvnException;
-import pojo.Sentence;
+import main.jvn.JvnObject;
+import main.jvn.jvnImpl.JvnServerImpl;
+import main.pojo.JvnException;
+import main.pojo.Sentence;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -38,7 +38,7 @@ public class JvnProxy implements InvocationHandler {
             }
 
         } catch (Exception e) {
-            System.out.println("IRC problem1 : " + e.getMessage());
+            e.printStackTrace();
         }
         return JvnProxy.newInstance(jo);
     }
@@ -58,13 +58,11 @@ public class JvnProxy implements InvocationHandler {
                 Lock lock = method.getAnnotation(Lock.class);
                 switch (lock.type()) {
                     case READ: {
-                        System.out.println("locking read");
                         jo.jvnLockRead();
                         result = method.invoke(jo.jvnGetSharedObject(), args);
                         break;
                     }
                     case WRITE: {
-                        System.out.println("locking write");
                         jo.jvnLockWrite();
                         result = method.invoke(jo.jvnGetSharedObject(), args);
                         break;

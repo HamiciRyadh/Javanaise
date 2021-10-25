@@ -1,4 +1,4 @@
-package proxy;
+package main.proxy;
 
 public interface ISentence {
 

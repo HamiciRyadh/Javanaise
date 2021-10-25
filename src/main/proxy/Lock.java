@@ -1,4 +1,4 @@
-package proxy;
+package main.proxy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

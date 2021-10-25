@@ -7,9 +7,9 @@
  * Authors: 
  */
 
-package jvn;
+package main.jvn;
 
-import pojo.JvnException;
+import main.pojo.JvnException;
 
 import java.rmi.*;
 import java.io.*;

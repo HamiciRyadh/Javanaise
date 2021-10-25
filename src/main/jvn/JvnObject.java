@@ -5,10 +5,10 @@
  * Authors: 
  */
 
-package jvn;
+package main.jvn;
 
-import pojo.JvnException;
-import pojo.Lock;
+import main.pojo.JvnException;
+import main.pojo.Lock;
 
 import java.io.Serializable;
 

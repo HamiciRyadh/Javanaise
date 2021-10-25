@@ -1,12 +1,12 @@
-package pojo;
+package main.pojo;
 
-import jvn.JvnObject;
+import main.jvn.JvnObject;
 
 import java.util.Map;
 
 public class JvnObjectContainer {
 
-    private JvnObject jvnObject;
+    private final JvnObject jvnObject;
     private final Map<Integer, Lock> remoteServerLocks;
 
     public JvnObjectContainer(JvnObject jvnObject, Map<Integer, Lock> remoteServerLocks) {
@@ -16,10 +16,6 @@ public class JvnObjectContainer {
 
     public JvnObject getJvnObject() {
         return jvnObject;
-    }
-
-    public void setJvnObject(JvnObject jvnObject) {
-        this.jvnObject = jvnObject;
     }
 
     public Map<Integer, Lock> getRemoteServerLocks() {

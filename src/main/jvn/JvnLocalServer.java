@@ -8,8 +8,8 @@
  * Authors: 
  */
 
-package jvn;
-import pojo.JvnException;
+package main.jvn;
+import main.pojo.JvnException;
 
 import java.io.Serializable;
 

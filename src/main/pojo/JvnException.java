@@ -5,7 +5,7 @@
  * Authors:  
  */
 
-package pojo;
+package main.pojo;
 
 /**
  * Interface of a JVN Exception. 

@@ -1,4 +1,4 @@
-package pojo;
+package main.pojo;
 
 public enum Lock {
     NO_LOCK, READ, WRITE, READ_CACHE, WRITE_CACHE, READ_WRITE_CACHE;;

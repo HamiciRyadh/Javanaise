@@ -5,10 +5,10 @@
  * Authors: 
  */
 
-package app;
+package main.app;
 
-import pojo.Sentence;
-import proxy.ISentence;
+import main.pojo.Sentence;
+import main.proxy.ISentence;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -34,7 +34,7 @@ public class Irc {
             new Irc(sentence);
 
         } catch (Exception e) {
-            System.out.println("IRC problem4 : " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
