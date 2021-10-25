@@ -17,6 +17,7 @@ import main.pojo.JvnObjectContainer;
 import main.pojo.Lock;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
@@ -179,8 +180,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
             for (Map.Entry<Integer, Lock> entry : joc.getRemoteServerLocks().entrySet()) {
                 if (entry.getValue() == Lock.WRITE) {
                     if (Objects.equals(entry.getKey(), jsId)) continue;
-                    final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriterForReader(joi);
-                    joc.getJvnObject().updateSharedObject(newVal);
+                    try {
+                        final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriterForReader(joi);
+                        joc.getJvnObject().updateSharedObject(newVal);
+                    } catch (RemoteException e) {
+                        // If the client is unattainable, remove it.
+                        jvnTerminate(remoteServerIDsMap.get(entry.getKey()));
+                    }
                     entry.setValue(Lock.READ);
                     break;
                 }
@@ -220,11 +226,16 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
                 if (Objects.equals(entry.getKey(), jsId)) continue;
                 if (entry.getValue() == Lock.NO_LOCK) continue;
 
-                if (entry.getValue() == Lock.READ) {
-                    remoteServerIDsMap.get(entry.getKey()).jvnInvalidateReader(joi);
-                } else if (entry.getValue() == Lock.WRITE) { // Lock.WRITE
-                    final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriter(joi);
-                    joc.getJvnObject().updateSharedObject(newVal);
+                try {
+                    if (entry.getValue() == Lock.READ) {
+                        remoteServerIDsMap.get(entry.getKey()).jvnInvalidateReader(joi);
+                    } else if (entry.getValue() == Lock.WRITE) { // Lock.WRITE
+                        final Serializable newVal = remoteServerIDsMap.get(entry.getKey()).jvnInvalidateWriter(joi);
+                        joc.getJvnObject().updateSharedObject(newVal);
+                    }
+                } catch (RemoteException e) {
+                    // If the client is unattainable, remove it.
+                    jvnTerminate(remoteServerIDsMap.get(entry.getKey()));
                 }
                 entry.setValue(Lock.NO_LOCK);
             }
