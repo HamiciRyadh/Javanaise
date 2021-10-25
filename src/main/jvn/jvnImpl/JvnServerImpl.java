@@ -166,7 +166,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
             final JvnObject jo = (JvnObject) coordinator.jvnLockRead(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
             jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
-            return jo.jvnGetSharedObject();
+            return jo;
         } catch (RemoteException e) {
             e.printStackTrace();
             throw new JvnException("A RemoteException occurred while request a read lock.");
@@ -185,7 +185,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
             final JvnObject jo = (JvnObject) coordinator.jvnLockWrite(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
             jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
-            return jo.jvnGetSharedObject();
+            return jo;
         } catch (RemoteException e) {
             e.printStackTrace();
             throw new JvnException("A RemoteException occurred while request a write lock.");
@@ -203,9 +203,9 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException, JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        jo.jvnInvalidateReader();
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
-        jo.jvnInvalidateReader();
     }
 
     /**
@@ -218,9 +218,10 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        final Serializable data = jo.jvnInvalidateWriter();
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
-        return jo.jvnInvalidateWriter();
+        return data;
     }
 
     /**
@@ -233,9 +234,10 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, JvnException {
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
+        final Serializable data = jo.jvnInvalidateWriterForReader();
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
         jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
-        return jo.jvnInvalidateWriterForReader();
+        return data;
     }
 
     private void flushCache() {
