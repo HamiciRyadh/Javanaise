@@ -20,6 +20,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,10 +29,14 @@ import java.util.Map;
 public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer, JvnRemoteServer {
 
     private static final long serialVersionUID = 1L;
+    private static final int CACHE_MAX_SIZE = 10;
+    private static final int CACHE_FLUSH_THRESHOLD = 8;
+
     // A JVN server is managed as a singleton
     private static JvnServerImpl js = null;
 
     private final Map<Integer, JvnObject> jvnObjectMap;
+    private final Map<Integer, Date> jvnObjectAccessMap;
     private final JvnRemoteCoord coordinator;
 
     /**
@@ -42,6 +48,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         super();
         // to be completed
         jvnObjectMap = new HashMap<>();
+        jvnObjectAccessMap = new HashMap<>();
         coordinator = (JvnRemoteCoord) LocateRegistry.getRegistry().lookup("Coordinator");
     }
 
@@ -90,7 +97,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
     public JvnObject jvnCreateObject(Serializable o) throws JvnException {
         try {
             final JvnObject jo = new JvnObjectImpl(coordinator.jvnGetObjectId(), o);
+            if (jvnObjectMap.size() > CACHE_FLUSH_THRESHOLD) {
+                flushCache();
+            }
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+            jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
             return jo;
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -125,7 +136,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         try {
             final JvnObject jo = coordinator.jvnLookupObject(jon, this);
             if (jo != null) {
+                if (jvnObjectMap.size() > CACHE_FLUSH_THRESHOLD) {
+                    flushCache();
+                }
                 jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+                jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
                 jo.updateLock(Lock.NO_LOCK);
             }
             return jo;
@@ -146,6 +161,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         try {
             final JvnObject jo = (JvnObject) coordinator.jvnLockRead(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+            jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
             return jo.jvnGetSharedObject();
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -164,6 +180,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         try {
             final JvnObject jo = (JvnObject) coordinator.jvnLockWrite(joi, this);
             jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+            jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
             return jo.jvnGetSharedObject();
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -183,6 +200,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+        jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
         jo.jvnInvalidateReader();
     }
 
@@ -197,6 +215,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+        jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
         return jo.jvnInvalidateWriter();
     }
 
@@ -211,6 +230,12 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
         final JvnObject jo = jvnObjectMap.get(joi);
         if (jo == null) throw new JvnException("JvnObjectId does not exist.");
         jvnObjectMap.put(jo.jvnGetObjectId(), jo);
+        jvnObjectAccessMap.put(jo.jvnGetObjectId(), new Date());
         return jo.jvnInvalidateWriterForReader();
+    }
+
+    private void flushCache() {
+        final Map.Entry<Integer, Date> oldest = jvnObjectAccessMap.entrySet().stream().min(Comparator.comparing(Map.Entry::getValue)).get();
+        jvnObjectMap.remove(oldest.getKey());
     }
 }
