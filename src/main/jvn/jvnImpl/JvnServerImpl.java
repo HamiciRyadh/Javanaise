@@ -29,7 +29,6 @@ import java.util.Map;
 public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer, JvnRemoteServer {
 
     private static final long serialVersionUID = 1L;
-    private static final int CACHE_MAX_SIZE = 10;
     private static final int CACHE_FLUSH_THRESHOLD = 8;
 
     // A JVN server is managed as a singleton
@@ -37,7 +36,7 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
 
     private final Map<Integer, JvnObject> jvnObjectMap;
     private final Map<Integer, Date> jvnObjectAccessMap;
-    private final JvnRemoteCoord coordinator;
+    private JvnRemoteCoord coordinator;
 
     /**
      * Default constructor
@@ -81,6 +80,11 @@ public class JvnServerImpl extends UnicastRemoteObject implements JvnLocalServer
             e.printStackTrace();
             throw new JvnException("A RemoteException occurred while terminating.");
         }
+    }
+
+    @Override
+    public void jvnUpdateCoordinator(JvnRemoteCoord coord) throws java.rmi.RemoteException, JvnException {
+        this.coordinator = coord;
     }
 
     @Override

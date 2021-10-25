@@ -2,13 +2,14 @@
  * JAVANAISE Implementation
  * JvnCoordImpl class
  * This class implements the Javanaise central coordinator
- * Contact:  
+ * Contact:
  *
- * Authors: 
+ * Authors:
  */
 
 package main.jvn.jvnImpl;
 
+import main.app.Coordinator;
 import main.jvn.JvnObject;
 import main.jvn.JvnRemoteCoord;
 import main.jvn.JvnRemoteServer;
@@ -16,12 +17,12 @@ import main.pojo.JvnException;
 import main.pojo.JvnObjectContainer;
 import main.pojo.Lock;
 
-import java.io.Serializable;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.sql.Array;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
@@ -33,6 +34,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
     private static final Object OBJECT_ID_LOCK = new Object();
     private static final Object SERVER_ID_LOCK = new Object();
 
+    private static final String FILENAME = "save.bin";
     private static int jvnObjectIdCounter = 0;
     private static int remoteServerIdCounter = 0;
 
@@ -53,16 +55,53 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      */
     private final Map<String, Integer> jvnObjectNameIdMap;
 
-
     /**
      * Default constructor
      *
      * @throws JvnException
      **/
-    private JvnCoordImpl() throws Exception {
-        jvnObjectContainerMap = new HashMap<>();
-        remoteServerIDsMap = new HashMap<>();
-        jvnObjectNameIdMap = new HashMap<>();
+    private JvnCoordImpl() throws RemoteException {
+        Map<String, Integer> jvnObjectNameIdMap1;
+        Map<Integer, JvnObjectContainer> jvnObjectContainerMap1;
+        Map<Integer, JvnRemoteServer> remoteServerIDsMap1;
+        final List<JvnRemoteServer> toRemove = new ArrayList<>();
+
+        try (FileInputStream fi = new FileInputStream(FILENAME);
+            ObjectInputStream oi = new ObjectInputStream(fi);) {
+            System.out.println("A save was found.");
+            // Read objects
+            jvnObjectContainerMap1 = (Map<Integer, JvnObjectContainer>) oi.readObject();
+            remoteServerIDsMap1 = (Map<Integer, JvnRemoteServer>) oi.readObject();
+            jvnObjectNameIdMap1 = (Map<String, Integer>) oi.readObject();
+            jvnObjectIdCounter = oi.readInt();
+            remoteServerIdCounter = oi.readInt();
+
+
+            remoteServerIDsMap1.forEach((key, value) -> {
+                try {
+                    value.jvnUpdateCoordinator(this);
+                } catch (RemoteException | JvnException e) {
+                    toRemove.add(value);
+                }
+            });
+        } catch (Exception e) {
+            System.out.println("No save found or an error occurred.");
+            jvnObjectContainerMap1 = new ConcurrentHashMap<>();
+            remoteServerIDsMap1 = new ConcurrentHashMap<>();
+            jvnObjectNameIdMap1 = new ConcurrentHashMap<>();
+        }
+
+        jvnObjectNameIdMap = jvnObjectNameIdMap1;
+        jvnObjectContainerMap = jvnObjectContainerMap1;
+        remoteServerIDsMap = remoteServerIDsMap1;
+
+        toRemove.forEach(js -> {
+            try {
+                jvnTerminate(js);
+            } catch (RemoteException | JvnException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public static JvnCoordImpl jvnGetCoordinator() {
@@ -119,6 +158,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         container.getRemoteServerLocks().put(jsId, Lock.DEFAULT_REGISTRATION_LOCK);
         jvnObjectContainerMap.put(jo.jvnGetObjectId(), container);
         jo.updateLock(Lock.NO_LOCK);
+        saveCurrentState();
     }
 
     /**
@@ -194,6 +234,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
             // Step 2: Give the requested lock.
             joc.getRemoteServerLocks().put(jsId, Lock.READ);
             joc.getJvnObject().updateLock(Lock.READ);
+            saveCurrentState();
 
             return joc.getJvnObject();
         }
@@ -243,6 +284,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
             // Step 2: Give the requested lock.
             joc.getRemoteServerLocks().put(jsId, Lock.WRITE);
             joc.getJvnObject().updateLock(Lock.WRITE);
+            saveCurrentState();
 
             return joc.getJvnObject();
         }
@@ -265,6 +307,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 
         // Step 2: Removing from the servers' map.
         remoteServerIDsMap.remove(jsId);
+
+        saveCurrentState();
     }
 
     private Integer findRemoteServerId(JvnRemoteServer js) {
@@ -273,6 +317,20 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
                 .map(Map.Entry::getKey)
                 .findAny()
                 .orElse(null);
+    }
+
+    private synchronized void saveCurrentState() {
+        try (FileOutputStream f = new FileOutputStream(FILENAME);
+             ObjectOutputStream o = new ObjectOutputStream(f)) {
+            // Write objects to file
+            o.writeObject(jvnObjectContainerMap);
+            o.writeObject(remoteServerIDsMap);
+            o.writeObject(jvnObjectNameIdMap);
+            o.writeInt(jvnObjectIdCounter);
+            o.writeInt(remoteServerIdCounter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

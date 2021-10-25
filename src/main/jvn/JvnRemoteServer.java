@@ -20,7 +20,7 @@ import java.io.*;
  * Remote interface of a JVN server (used by a remote JvnCoord)
  */
 
-public interface JvnRemoteServer extends Remote {
+public interface JvnRemoteServer extends Remote, Serializable {
 
     /**
      * Invalidate the Read lock of a JVN object
@@ -28,7 +28,7 @@ public interface JvnRemoteServer extends Remote {
      * @param joi : the JVN object id
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException, JvnException;
+    void jvnInvalidateReader(int joi) throws java.rmi.RemoteException, JvnException;
 
     /**
      * Invalidate the Write lock of a JVN object
@@ -37,7 +37,7 @@ public interface JvnRemoteServer extends Remote {
      * @return the current JVN object state
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, JvnException;
+    Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, JvnException;
 
     /**
      * Reduce the Write lock of a JVN object
@@ -46,8 +46,9 @@ public interface JvnRemoteServer extends Remote {
      * @return the current JVN object state
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, JvnException;
+    Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, JvnException;
 
+    void jvnUpdateCoordinator(JvnRemoteCoord coord) throws java.rmi.RemoteException, JvnException;
 }
 
  
