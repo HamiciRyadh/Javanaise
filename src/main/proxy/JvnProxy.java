@@ -67,9 +67,17 @@ public class JvnProxy implements InvocationHandler {
                         result = method.invoke(jo.jvnGetSharedObject(), args);
                         break;
                     }
+                    case UNLOCK: {
+                        result = method.invoke(jo.jvnGetSharedObject(), args);
+                        break;
+                    }
                 }
                 // No matter what type of lock was requested, always unlock at the end.
-                jo.jvnUnLock();
+                if (jo.jvnGetSharedObject() instanceof Transactional) {
+                    if (!((Transactional) jo.jvnGetSharedObject()).isTransactionRunning()) {
+                        jo.jvnUnLock();
+                    }
+                } else jo.jvnUnLock();
             } else {
                 // If the method was not annotated, execute it normally.
                 result = method.invoke(jo.jvnGetSharedObject(), args);

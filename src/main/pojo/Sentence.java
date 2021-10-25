@@ -10,12 +10,14 @@ package main.pojo;
 
 import main.proxy.ISentence;
 import main.proxy.JvnProxy;
+import main.proxy.Transactional;
 
 import java.io.Serializable;
 
-public class Sentence implements Serializable, ISentence {
+public class Sentence implements Serializable, ISentence, Transactional {
 	private static final long serialVersionUID = 1L;
 	private String 	data;
+	private boolean transactionRunning;
 
 	public Sentence() {
 		data = "";
@@ -38,5 +40,20 @@ public class Sentence implements Serializable, ISentence {
 	@Override
 	public String read() {
 		return data;	
+	}
+
+	@Override
+	public void startTransaction() {
+		transactionRunning = true;
+	}
+
+	@Override
+	public void endTransaction() {
+		transactionRunning = false;
+	}
+
+	@Override
+	public boolean isTransactionRunning() {
+		return transactionRunning;
 	}
 }
