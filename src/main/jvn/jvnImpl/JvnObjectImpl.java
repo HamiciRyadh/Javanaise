@@ -21,11 +21,12 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public void jvnLockRead() throws JvnException {
-        this.lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
+        lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
         switch (lock) {
             case NO_LOCK: {
-                sharedObject = JvnServerImpl.jvnGetServer().jvnLockRead(id);
-                lock = Lock.READ;
+                final JvnObject jo = (JvnObject) JvnServerImpl.jvnGetServer().jvnLockRead(id);
+                sharedObject = jo.jvnGetSharedObject();
+                lock = jo.getLock();
                 break;
             }
             case READ:
@@ -45,12 +46,13 @@ public class JvnObjectImpl implements JvnObject {
 
     @Override
     public void jvnLockWrite() throws JvnException {
-        this.lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
+        lock = JvnServerImpl.jvnGetServer().findCachedValue(id).getLock();
         switch (lock) {
             case NO_LOCK:
             case READ_CACHE:{
-                sharedObject = JvnServerImpl.jvnGetServer().jvnLockWrite(id);
-                lock = Lock.WRITE;
+                final JvnObject jo = (JvnObject) JvnServerImpl.jvnGetServer().jvnLockWrite(id);
+                sharedObject = jo.jvnGetSharedObject();
+                lock = jo.getLock();
                 break;
             }
             case WRITE_CACHE:
@@ -105,7 +107,7 @@ public class JvnObjectImpl implements JvnObject {
     }
 
     @Override
-    public synchronized void jvnInvalidateReader() throws JvnException {
+    public void jvnInvalidateReader() throws JvnException {
         if (lock == Lock.READ) {
             try {
                 wait();
@@ -121,7 +123,7 @@ public class JvnObjectImpl implements JvnObject {
     }
 
     @Override
-    public synchronized Serializable jvnInvalidateWriter() throws JvnException {
+    public Serializable jvnInvalidateWriter() throws JvnException {
         if (lock == Lock.WRITE) {
             try {
                 wait();
