@@ -5,6 +5,7 @@ import main.jvn.jvnImpl.JvnServerImpl;
 import main.pojo.JvnException;
 import main.pojo.Sentence;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
@@ -17,7 +18,7 @@ public class JvnProxy implements InvocationHandler {
     }
 
 
-    public static Object newInstance(String jon) throws JvnException {
+    public static Object newInstance(String jon, Class<? extends Serializable> c) throws JvnException {
         JvnObject jo = null;
 
         try{
@@ -29,7 +30,7 @@ public class JvnProxy implements InvocationHandler {
 
             if (jo == null) {
                 System.out.println(jon + " not found, creating it ...");
-                jo = js.jvnCreateObject(new Sentence());
+                jo = js.jvnCreateObject(c.getConstructor().newInstance());
                 // after creation, we have a "write" lock on the object
                 jo.jvnUnLock();
                 js.jvnRegisterObject(jon, jo);

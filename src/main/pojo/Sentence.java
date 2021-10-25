@@ -25,7 +25,7 @@ public class Sentence implements Serializable, ISentence, Transactional {
 
 	public static ISentence newSharedInstance(String jon) {
 		try {
-			return (ISentence) JvnProxy.newInstance(jon);
+			return (ISentence) JvnProxy.newInstance(jon, Sentence.class);
 		} catch (JvnException e) {
 			e.printStackTrace();
 		}
